@@ -3,7 +3,7 @@ import ptxconftools
 from ptxconftools import ConfController
 from ptxconftools.gtk import MonitorSelector
 import pygtk
-import appindicator
+# import appindicator
 pygtk.require('2.0')
 import gtk
 import os
@@ -12,9 +12,9 @@ iconpath = os.path.dirname( ptxconftools.__file__ )+"/iconStyle03_256.png"
 
 class PTXConfUI():
     def __init__(self):
-        # create systray interface
-        self.systray = appindicator.Indicator( "testname", iconpath, appindicator.CATEGORY_APPLICATION_STATUS)
-        self.systray.set_status(appindicator.STATUS_ACTIVE)
+        # # create systray interface
+        # self.systray = appindicator.Indicator( "testname", iconpath, appindicator.CATEGORY_APPLICATION_STATUS)
+        # self.systray.set_status(appindicator.STATUS_ACTIVE)
 
         # construct menu
         menu = gtk.Menu()
@@ -28,7 +28,7 @@ class PTXConfUI():
         mitem.show()
 
         # attach menu to out system tray
-        self.systray.set_menu(menu)
+        # self.systray.set_menu(menu)
 
         # instantiate confcontroller
         self.myConf = ConfController()
