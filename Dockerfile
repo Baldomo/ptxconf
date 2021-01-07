@@ -1,12 +1,9 @@
-FROM python:2.7
+FROM python:3.9
 
 RUN apt update
 RUN apt install -yqq xinput x11-xserver-utils
-RUN apt install -yqq python-gtk2 libappindicator1
-CMD mkdir -p /opt/tmp/python-appindicator
-CMD wget  --no-check-certificate 'http://my.opendesktop.org/s/gfCdMmfLaX627rj/download' -O /opt/tmp/python-appindicator/python-appindicator_0.4.92-4_amd64.deb
-CMD dpkg -i /opt/tmp/python-appindicator/python-appindicator_0.4.92-4_amd64.deb
-CMD apt-get install -f -y
+RUN apt install -yqq python-gobject python3-gi gir1.2-gtk-3.0
+RUN apt install -yqq gir1.2-appindicator3
 
 # Add user so that container does not run as root 
 RUN useradd -m docker 
