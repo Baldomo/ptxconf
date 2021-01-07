@@ -177,4 +177,6 @@ class PTXConfUI():
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 p = PTXConfUI()
+p.createConfigWindow()
+p.window.connect("destroy", gtk.main_quit)
 p.main()
