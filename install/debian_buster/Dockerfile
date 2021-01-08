@@ -1,6 +1,7 @@
-FROM python:3.9
+FROM debian:buster
 
 RUN apt update
+RUN apt install -yqq python3
 RUN apt install -yqq xinput x11-xserver-utils
 RUN apt install -yqq python-gobject python3-gi gir1.2-gtk-3.0
 RUN apt install -yqq gir1.2-appindicator3

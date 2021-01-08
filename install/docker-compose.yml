@@ -1,6 +1,6 @@
 ptxconf:
   volumes:
-    - ".:/usr/src/app:rw"
+    - "..:/usr/src/app:rw"
     - "/tmp/.X11-unix:/tmp/.X11-unix:ro"
   environment:
     - DISPLAY
