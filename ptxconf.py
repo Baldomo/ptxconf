@@ -3,19 +3,27 @@ import ptxconftools
 from ptxconftools import ConfController
 from ptxconftools.gtk import MonitorSelector
 import gi
-gi.require_version('Gtk', '3.0')
+
+gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk as gtk
-gi.require_version('AppIndicator3', '0.1')
+
+gi.require_version("AppIndicator3", "0.1")
 from gi.repository import AppIndicator3 as appindicator
 import os
 
-iconpath = os.path.dirname( ptxconftools.__file__ )+"/iconStyle03_256.png"
+iconpath = os.path.dirname(ptxconftools.__file__) + "/iconStyle03_256.png"
 APPINDICATOR_ID = "PTXConf"
-class PTXConfUI():
+
+
+class PTXConfUI:
     def __init__(self):
         # create systray interface
-        self.systray = appindicator.Indicator.new(APPINDICATOR_ID, "testname", appindicator.IndicatorCategory.SYSTEM_SERVICES)
-        self.systray = appindicator.Indicator.new(APPINDICATOR_ID, iconpath, appindicator.IndicatorCategory.SYSTEM_SERVICES)
+        self.systray = appindicator.Indicator.new(
+            APPINDICATOR_ID, "testname", appindicator.IndicatorCategory.SYSTEM_SERVICES
+        )
+        self.systray = appindicator.Indicator.new(
+            APPINDICATOR_ID, iconpath, appindicator.IndicatorCategory.SYSTEM_SERVICES
+        )
         self.systray.set_status(appindicator.IndicatorStatus.ACTIVE)
 
         # construct menu
@@ -29,7 +37,7 @@ class PTXConfUI():
         menu.show_all()
 
         # attach menu to out system tray
-        # self.systray.set_menu(menu)
+        self.systray.set_menu(menu)
 
         # instantiate confcontroller
         self.myConf = ConfController()
@@ -70,7 +78,7 @@ class PTXConfUI():
         # This creats a popup window for more detailed configuration if user find necessary.
         # Still incomplete at the moment.
         self.window = gtk.Window()
-        #self.window.set_position(gtk.WIN_POS_CENTER)
+        # self.window.set_position(gtk.WIN_POS_CENTER)
         self.window.set_border_width(20)
         self.window.set_title("PTXConf")
         self.window.connect("destroy", self.destroyConfigWindow)
@@ -89,32 +97,34 @@ class PTXConfUI():
         labelEmptySpace01 = gtk.Label()
         labelEmptySpace02 = gtk.Label()
 
-        label01 = gtk.Label("pointer device")
-        label02 = gtk.Label("monitor")
+        label01 = gtk.Label("Pointer device")
+        label02 = gtk.Label("Monitor")
         # create monitor selector widget
         monSelector = MonitorSelector(self.myConf.monitorIds)
         # dropdown menus 1 and 2, users choose what input device map to what monitor.
         # creat and set up dopdownmenu 1: user select from a list of connected pen input deivces.
         ptDropdown = gtk.ComboBoxText()
-#        ptDropdown.set_tooltip_text("choose an input device to configure")
+        # ptDropdown.set_tooltip_text("choose an input device to configure")
         # getting the list of names of the input device
         # set up the dropdown selection for input devices
-        ptDropdown.append_text('Select input device:')
+        ptDropdown.append_text("Select input device:")
         for i in self.myConf.penTouchIds:
             ptDropdown.append_text(i.decode() if isinstance(i, bytes) else i)
         ptDropdown.set_active(0)
-        # ptDropdown.connect("changed", self.getActiveInput)
+        ptDropdown.connect("changed", self.getActiveInput)
         # creat and set up dopdownmenu 2: user select from a list of connected display/output deivces.
         monitorDropdown = gtk.ComboBoxText()
-#        monitorDropdown.set_tooltip_text("choose a monitor to map the input to")
+        # monitorDropdown.set_tooltip_text("choose a monitor to map the input to")
         # getting the list of display names
         # set up the dropdown selection for monitors
-        monitorDropdown.append_text('Select a monitor:')
+        monitorDropdown.append_text("Select a monitor:")
         monitorDropdown.mons = self.myConf.monitorIds.keys()
         for key in monitorDropdown.mons:
             monitorDropdown.append_text(key.decode() if isinstance(key, bytes) else key)
         monitorDropdown.set_active(0)
-        monitorDropdown.handler_id_changed = monitorDropdown.connect("changed", self.monDropdownCallback)
+        monitorDropdown.handler_id_changed = monitorDropdown.connect(
+            "changed", self.monDropdownCallback
+        )
 
         # connect apply button to function
         button_apply.connect("clicked", self.mapTabletToMonitor)
@@ -143,7 +153,9 @@ class PTXConfUI():
 
         # store convenient handle to drop down boxes
         self.window.monitorSelector = monSelector
-        self.window.monitorSelector.connect('button-press-event', self.monSelectorCallback)
+        self.window.monitorSelector.connect(
+            "button-press-event", self.monSelectorCallback
+        )
         self.window.ptDropdown = ptDropdown
         self.window.monitorDropdown = monitorDropdown
 
@@ -163,7 +175,7 @@ class PTXConfUI():
             # careful to disable dropdown changed callback while doing this
             hid = self.window.monitorDropdown.handler_id_changed
             self.window.monitorDropdown.handler_block(hid)
-            self.window.monitorDropdown.set_active(idx+1)
+            self.window.monitorDropdown.set_active(idx + 1)
             self.window.monitorDropdown.handler_unblock(hid)
 
     def destroyConfigWindow(self, callback_data=None):
@@ -175,8 +187,9 @@ class PTXConfUI():
 
 
 import signal
+
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 p = PTXConfUI()
 p.createConfigWindow()
-p.window.connect("destroy", gtk.main_quit)
+# p.window.connect("destroy", gtk.main_quit)
 p.main()

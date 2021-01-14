@@ -1,2 +1,1 @@
 from .monitorselector import MonitorSelector
-

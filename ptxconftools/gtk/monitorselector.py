@@ -1,14 +1,16 @@
 #! /usr/bin/python
 
 import gi
-gi.require_version('Gtk', '3.0')
+
+gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk as gtk
 from gi.repository import Gdk
 import math
 
+
 class MonitorSelector(gtk.DrawingArea):
-    active_mon_style = (0,0.7,0)
-    mon_style = (0.5,0.5,0.5)
+    active_mon_style = (0, 0.7, 0)
+    mon_style = (0.5, 0.5, 0.5)
     margin = 10
     line_width = 4
 
@@ -18,11 +20,11 @@ class MonitorSelector(gtk.DrawingArea):
         self.set_mon_info(moninfo)
         self.active_mon = active_mon + ""
         self.connect("draw", self.expose)
-#        self.set_events(gtk.gdk.BUTTON_PRESS_MASK)
+        # self.set_events(gtk.gdk.BUTTON_PRESS_MASK)
         self.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
-        self.connect('button-press-event', self.on_mouse_click)
+        self.connect("button-press-event", self.on_mouse_click)
 
-    def set_mon_info(self,moninfo):
+    def set_mon_info(self, moninfo):
         self.moninfo = moninfo.copy()
 
     def on_mouse_click(self, widget, event):
@@ -44,14 +46,14 @@ class MonitorSelector(gtk.DrawingArea):
         total_w = 0.0
         total_h = 0.0
         for m in self.moninfo:
-            w = self.moninfo[m]['w']
-            x = self.moninfo[m]['x']
-            h = self.moninfo[m]['h']
-            y = self.moninfo[m]['y']
-            if (w+x) > total_w:
-                total_w = w+x
-            if (h+y) > total_h:
-                total_h = h+y
+            w = self.moninfo[m]["w"]
+            x = self.moninfo[m]["x"]
+            h = self.moninfo[m]["h"]
+            y = self.moninfo[m]["y"]
+            if (w + x) > total_w:
+                total_w = w + x
+            if (h + y) > total_h:
+                total_h = h + y
         return (total_w, total_h)
 
     def _lookup_xy2mon(self, x, y):
@@ -59,7 +61,7 @@ class MonitorSelector(gtk.DrawingArea):
         for mon in mon_rectangles:
             if mon != "display":
                 mx, my, mw, mh = mon_rectangles[mon]
-                if x > mx and x < mx+mw and y > my and y < my+mh:
+                if x > mx and x < mx + mw and y > my and y < my + mh:
                     # then mouse click on monitor
                     return mon
         return "display"
@@ -70,43 +72,43 @@ class MonitorSelector(gtk.DrawingArea):
         mons_tw, mons_th = self.monitor_space_px()
         margin = self.margin
 
-        margin_shrink_x = (w - 2.0*margin)/w
-        margin_shrink_y = (h - 2.0*margin)/h
+        margin_shrink_x = (w - 2.0 * margin) / w
+        margin_shrink_y = (h - 2.0 * margin) / h
 
-        w_wo_margins = w*margin_shrink_x
-        h_wo_margins = h*margin_shrink_y
+        w_wo_margins = w * margin_shrink_x
+        h_wo_margins = h * margin_shrink_y
 
-        mons_aspect = float(mons_th)/mons_tw
-        draw_aspect = float(h_wo_margins)/w_wo_margins
+        mons_aspect = float(mons_th) / mons_tw
+        draw_aspect = float(h_wo_margins) / w_wo_margins
 
         if mons_aspect < draw_aspect:
             margin_shrink = margin_shrink_x
-            scale = float(w)/mons_tw
+            scale = float(w) / mons_tw
         else:
             margin_shrink = margin_shrink_y
-            scale = float(h)/mons_th
+            scale = float(h) / mons_th
 
-        cent_x = (w_wo_margins - mons_tw*scale*margin_shrink)/2.0
-        cent_y = (h_wo_margins - mons_th*scale*margin_shrink)/2.0
+        cent_x = (w_wo_margins - mons_tw * scale * margin_shrink) / 2.0
+        cent_y = (h_wo_margins - mons_th * scale * margin_shrink) / 2.0
 
         mon_rectangles = {}
         for mon in self.moninfo:
-            mw = float(self.moninfo[mon]['w'])*scale*margin_shrink
-            mh = float(self.moninfo[mon]['h'])*scale*margin_shrink
-            mx = float(self.moninfo[mon]['x'])*scale*margin_shrink + margin + cent_x
-            my = float(self.moninfo[mon]['y'])*scale*margin_shrink + margin + cent_y
+            mw = float(self.moninfo[mon]["w"]) * scale * margin_shrink
+            mh = float(self.moninfo[mon]["h"]) * scale * margin_shrink
+            mx = float(self.moninfo[mon]["x"]) * scale * margin_shrink + margin + cent_x
+            my = float(self.moninfo[mon]["y"]) * scale * margin_shrink + margin + cent_y
             mon_rectangles[mon] = (mx, my, mw, mh)
         # finally add total display rectangle
-        mw = float(mons_tw)*scale*margin_shrink
-        mh = float(mons_th)*scale*margin_shrink
+        mw = float(mons_tw) * scale * margin_shrink
+        mh = float(mons_th) * scale * margin_shrink
         mx = 0.0 + margin + cent_x
         my = 0.0 + margin + cent_y
         mon_rectangles["display"] = (mx, my, mw, mh)
         return mon_rectangles
 
     def expose(self, widget, cr):
-        #cr = widget.window.cairo_create()
-        #cr = widget
+        # cr = widget.window.cairo_create()
+        # cr = widget
         mon_rectangles = self._get_mon_rectangles()
         for mon in mon_rectangles:
             if mon == self.active_mon:
@@ -114,18 +116,18 @@ class MonitorSelector(gtk.DrawingArea):
             else:
                 cr.set_source_rgb(*self.mon_style)
             cr.set_line_width(self.line_width)
-            x,y,w,h = mon_rectangles[mon]
+            x, y, w, h = mon_rectangles[mon]
             lw = self.line_width
             if mon != b"display" and mon != "display":
                 # Note: inset rectangles inset by line width so they don't overlap
-                cr.rectangle(x+lw,y+lw,w-lw,h-lw)
+                cr.rectangle(x + lw, y + lw, w - lw, h - lw)
                 cr.stroke()
                 cr.set_font_size(12)
                 tx, ty, tw, th, tdx, tdy = cr.text_extents(str(mon))
-                cr.move_to(x+w/2-tw/2, y+h/2+th/2)
+                cr.move_to(x + w / 2 - tw / 2, y + h / 2 + th / 2)
                 cr.show_text(str(mon))
             else:
                 # draw total display/desktop with different line/no text
-                cr.set_line_width(self.line_width/2)
-                cr.rectangle(x,y,w+lw,h+lw)
+                cr.set_line_width(self.line_width / 2)
+                cr.rectangle(x, y, w + lw, h + lw)
                 cr.stroke()
