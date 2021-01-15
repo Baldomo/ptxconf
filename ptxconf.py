@@ -91,7 +91,7 @@ class PTXConfUI:
         label_monitor = gtk.Label.new("Monitor")
 
         # create monitor selector widget
-        mon_selector = MonitorSelector(self.config.monitorIds)
+        mon_selector = MonitorSelector(self.config.monitor_ids)
 
         # dropdown menus 1 and 2, users choose what input device map to what monitor.
         ptr_dropdown = gtk.ComboBoxText()
@@ -99,7 +99,7 @@ class PTXConfUI:
         # getting the list of names of the input device
         # set up the dropdown selection for input devices
         ptr_dropdown.append_text("")
-        for i in self.config.penTouchIds:
+        for i in self.config.pen_touch_ids:
             ptr_dropdown.append_text(i.decode() if isinstance(i, bytes) else i)
         ptr_dropdown.set_active(0)
         ptr_dropdown.connect("changed", self.get_active_input)
@@ -111,7 +111,7 @@ class PTXConfUI:
         # getting the list of display names
         # set up the dropdown selection for monitors
         monitor_dropdown.append_text("")
-        monitor_dropdown.mons = self.config.monitorIds.keys()
+        monitor_dropdown.mons = self.config.monitor_ids.keys()
         for key in monitor_dropdown.mons:
             monitor_dropdown.append_text(key.decode() if isinstance(key, bytes) else key)
         monitor_dropdown.set_active(0)
@@ -148,7 +148,7 @@ class PTXConfUI:
         self.window.pt_dropdown = ptr_dropdown
         self.window.monitor_dropdown = monitor_dropdown
 
-    def monitor_dropdown_callback(self, calback_data=None):
+    def monitor_dropdown_callback(self, callback_data=None):
         # update MonitorSelector
         mon = self.window.monitor_dropdown.get_active_text()
         if mon in self.window.monitor_selector.moninfo:
