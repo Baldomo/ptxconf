@@ -6,15 +6,13 @@ Configures touch/pen devices to work with extended desktops and multiple screens
 ## Usage
 To test ptxconf without installing it you can simply run the python executable directly from the source directory:
 ```sh
-$ git clone http://github.com/wenhsinjen/ptxconf.git
-$ cd ptxconf
 $ ./ptxconf.py
 ```
 NOTE: You may need to install the following dependencies first.
 On Debian or Ubuntu based systems you can install the following packages before running PTXConf:
 ```sh
 $ sudo apt-get install xinput x11-xserver-utils
-$ sudo apt-get install python-gtk2 python-appindicator
+$ sudo apt-get install python-gobject python3-gi gir1.2-gtk-3.0 gir1.2-appindicator3
 ```
 
 After starting the application a tablet pen icon should sit in your system tray:
@@ -39,7 +37,7 @@ NOTE: Currently ptxconf rotates the xinput axis to match the XWindows screen rot
 PTXConf depends on the python gtk2 and the AppIndicator binding. In the current POC state of this software we also depend on the xinput and xrandr command line tools. On debian based systems you can install these packages as follows,
 ```sh
 $ sudo apt-get install xinput x11-xserver-utils
-$ sudo apt-get install python-gtk2, python-appindicator
+$ sudo apt-get install python3-gi
 ```
 Then install this package,
 ```sh
@@ -59,13 +57,13 @@ from ptxconftools import ConfController
 cc = ConfController()
 
 # list pen/touch like pointing devices
-for pt in cc.penTouchIds:
-  print pt, cc.penTouchIds[pt]['id']
+for pt in cc.pen_touch_ids:
+  print(pt, cc.pen_touch_ids[pt]['id'])
 
 # list monitor layout
-for mon in cc.monitorIds:
-  print mon, cc.monitorIds[mon]
+for mon in cc.monitor_ids:
+  print(mon, cc.monitor_ids[mon])
 
 # map pointer device 'myPen' to monitor 'hdmi-1'
-cc.setPT2Monitor('myPen','hdmi-1')
+cc.set_pen_to_monitor('myPen','hdmi-1')
 ```

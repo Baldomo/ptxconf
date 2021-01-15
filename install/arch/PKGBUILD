@@ -1,0 +1,27 @@
+pkgname=ptxconf-git
+pkgver=r35.70d2e20
+pkgrel=3
+pkgdesc="Pen tablet and Touch screen Xinput Configuration tool (PTXConf). Configures touch/pen devices to work with extended desktops and multiple screens on Linux"
+arch=('i686' 'x86_64')
+url="https://github.com/Baldomo/ptxconf"
+license=('AGPL3')
+depends=('xorg-xinput' 'python-gobject' 'python3')
+makedepends=('git')
+provides=('ptxconf')
+conflicts=('ptxconf')
+source=("${pkgname}::git+https://github.com/Baldomo/ptxconf.git"
+        'ptxconf.desktop')
+md5sums=('SKIP'
+         'efa512bd5fb444c00622e28849961b14')
+
+pkgver() {
+  cd ${pkgname}
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+package() {
+  cd ${srcdir}/${pkgname}
+  python setup.py install --root=${pkgdir}/ --optimize=1
+  mv ${pkgdir}/usr/bin/ptxconf.py ${pkgdir}/usr/bin/ptxconf
+  install -D ${srcdir}/ptxconf.desktop ${pkgdir}/usr/share/applications/ptxconf.desktop
+}
