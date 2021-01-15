@@ -12,13 +12,13 @@ class ConfController:
     """This class exposes information about pen/tablet pointing device configuration
     and gives methods for reconfiguring those devices"""
 
-    penTouchIds = None
-    monitorIds = None
+    pen_touch_ids = None
+    monitor_ids = None
     display = None
 
     def __init__(self):
-        self.penTouchIds = self.getPenTouchIds()
-        self.monitorIds, self.display = self.getMonitorIds()
+        self.pen_touch_ids = self.get_pen_touch_ids()
+        self.monitor_ids, self.display = self.get_monitor_ids()
 
     def refresh(self):
         self.refreshMonitorIds()
@@ -26,11 +26,11 @@ class ConfController:
 
     def refreshMonitorIds(self):
         """reload monitor layout information """
-        self.monitorIds, self.display = self.getMonitorIds()
+        self.monitor_ids, self.display = self.get_monitor_ids()
 
     def refreshPenTouchIds(self):
         """reload pen/touch tabled ids"""
-        self.penTouchIds = self.getPenTouchIds()
+        self.pen_touch_ids = self.get_pen_touch_ids()
 
     def getPointerDeviceMode(self, id):
         """Queries the pointer device mode. Returns "asolute" or "relative" """
@@ -43,7 +43,7 @@ class ConfController:
                 return line.lower().split(b"mode=")[1].split(b" ")[0]
         return None
 
-    def getPenTouchIds(self):
+    def get_pen_touch_ids(self):
         """Returns a list of input id/name pairs for all available pen/tablet xinput devices"""
         retval = subprocess.Popen(
             "xinput list", shell=True, stdout=subprocess.PIPE
@@ -59,7 +59,7 @@ class ConfController:
                     ids[key.decode() if isinstance(key, bytes) else key] = {"id": id}
         return ids
 
-    def getMonitorIds(self):
+    def get_monitor_ids(self):
         """Returns a list of screens composing the default x-display"""
         retval = subprocess.Popen(
             "xrandr", shell=True, stdout=subprocess.PIPE
@@ -83,7 +83,7 @@ class ConfController:
                 layout_strings = line.split(b"(")[0].strip().split(b" ")
                 for element in layout_strings:
                     if (
-                        re.match(r"^[0-9]+x[0-9]+\+[0-9]+\+[0-9]+$", element.strip())
+                        re.match(br"^[0-9]+x[0-9]+\+[0-9]+\+[0-9]+$", element.strip())
                         is not None
                     ):
                         placement = element
@@ -110,7 +110,7 @@ class ConfController:
 
         return monitors, display0_dim
 
-    def getDeviceCTM(self, id):
+    def get_device_ctm(self, id):
         command = subprocess.Popen(
             'xinput list-props %d | grep "Coordinate Transformation Matrix"' % id,
             shell=True,
@@ -118,7 +118,7 @@ class ConfController:
         ).stdout.read()
         return command
 
-    def setDeviceCTM(self, id, ctm="0.5 0 0.5 0 1 0 0 0 1"):
+    def set_device_ctm(self, id, ctm="0.5 0 0.5 0 1 0 0 0 1"):
         command = subprocess.Popen(
             "xinput set-prop %d 'Coordinate Transformation Matrix' %s" % (id, ctm),
             shell=True,
@@ -126,7 +126,7 @@ class ConfController:
         ).stdout.read()
         return command
 
-    def resetDeviceCTM(self, id):
+    def reset_device_ctm(self, id):
         command = subprocess.Popen(
             "xinput set-prop %d 'Coordinate Transformation Matrix' 1 0 0 0 1 0 0 0 1"
             % id,
@@ -135,7 +135,7 @@ class ConfController:
         ).stdout.read()
         return command
 
-    def setDeviceAxesSwap(self, id, swap=False):
+    def set_device_axes_swap(self, id, swap=False):
         command = subprocess.Popen(
             "xinput set-prop %d --type=int 'Evdev Axes Swap' %d" % (id, int(swap)),
             shell=True,
@@ -143,7 +143,7 @@ class ConfController:
         ).stdout.read()
         return command
 
-    def setDeviceAxisInversion(self, id, xinv=False, yinv=False):
+    def set_device_axis_inversion(self, id, xinv=False, yinv=False):
         command = subprocess.Popen(
             "xinput set-prop %d --type=int 'Evdev Axis Inversion' %d %d"
             % (id, int(xinv), int(yinv)),
@@ -152,7 +152,7 @@ class ConfController:
         ).stdout.read()
         return command
 
-    def setMapToOutput(self, id, monitor):
+    def set_map_to_output(self, id, monitor):
         command = subprocess.Popen(
             "xinput map-to-output %d %s" % (id, monitor),
             shell=True,
@@ -160,7 +160,7 @@ class ConfController:
         ).stdout.read()
         return command
 
-    def setDeviceAxisRotation(self, id, rotation=None):
+    def set_device_axis_rotation(self, id, rotation=None):
         if rotation == "right":
             swap = True
             xinv = False
@@ -177,28 +177,28 @@ class ConfController:
             swap = False
             xinv = False
             yinv = False
-        self.setDeviceAxesSwap(id, swap)
-        self.setDeviceAxisInversion(id, xinv, yinv)
+        self.set_device_axes_swap(id, swap)
+        self.set_device_axis_inversion(id, xinv, yinv)
 
-    def setPT2Monitor(self, pen, monitor):
+    def set_pen_to_monitor(self, pen, monitor):
         """Configure pen to control monitor"""
-        penid = self.penTouchIds[pen]["id"]
+        penid = self.pen_touch_ids[pen]["id"]
         dw = self.display["w"]
         dh = self.display["h"]
-        mw = self.monitorIds[monitor]["w"]
-        mh = self.monitorIds[monitor]["h"]
-        mx = self.monitorIds[monitor]["x"]
-        my = self.monitorIds[monitor]["y"]
-        rot = self.monitorIds[monitor]["rotation"]
-        ctm = CTMGenerator(dw, dh, mw, mh, mx, my)
+        mw = self.monitor_ids[monitor]["w"]
+        mh = self.monitor_ids[monitor]["h"]
+        mx = self.monitor_ids[monitor]["x"]
+        my = self.monitor_ids[monitor]["y"]
+        rot = self.monitor_ids[monitor]["rotation"]
+        ctm = generate_ctm(dw, dh, mw, mh, mx, my)
         # self.resetDeviceCTM(penid)
-        self.setDeviceCTM(penid, ctm)
-        self.setDeviceAxisRotation(penid, rot)
+        self.set_device_ctm(penid, ctm)
+        self.set_device_axis_rotation(penid, rot)
         # self.setMapToOutput(penid, monitor)
 
 
-def CTMGenerator(dw, dh, mw, mh, mx, my):
-    """generate coordinate transform matrix for a tablet controlling screen out of n_screens in a row"""
+def generate_ctm(dw, dh, mw, mh, mx, my):
+    """Generate coordinate transform matrix for a tablet controlling screen out of n_screens in a row"""
     return "%f 0 %f 0 %f %f 0 0 1" % (
         float(mw) / dw,
         float(mx) / dw,

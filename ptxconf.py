@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python
 import ptxconftools
 from ptxconftools import ConfController
 from ptxconftools.gtk import MonitorSelector
@@ -19,19 +19,16 @@ class PTXConfUI:
     def __init__(self):
         # create systray interface
         self.systray = appindicator.Indicator.new(
-            APPINDICATOR_ID, "testname", appindicator.IndicatorCategory.SYSTEM_SERVICES
-        )
-        self.systray = appindicator.Indicator.new(
             APPINDICATOR_ID, iconpath, appindicator.IndicatorCategory.SYSTEM_SERVICES
         )
         self.systray.set_status(appindicator.IndicatorStatus.ACTIVE)
 
         # construct menu
         menu = gtk.Menu()
-        mitem = gtk.MenuItem("configure")
-        mitem.connect("activate", self.createConfigWindow)
+        mitem = gtk.MenuItem(label="Configure")
+        mitem.connect("activate", self.create_config_window)
         menu.append(mitem)
-        mitem = gtk.MenuItem("exit")
+        mitem = gtk.MenuItem(label="Exit")
         mitem.connect("activate", self.exit_program)
         menu.append(mitem)
         menu.show_all()
@@ -40,30 +37,30 @@ class PTXConfUI:
         self.systray.set_menu(menu)
 
         # instantiate confcontroller
-        self.myConf = ConfController()
+        self.config = ConfController()
 
     # def resetAllConfig(self, callback_data=None):
     #    self.myConf.resetAllDeviceConfig()
 
-    def getActiveInput(self):
-        a = self.window.ptDropdown.get_active_text()
-        b = self.window.ptDropdown.get_active()
+    def get_active_input(self):
+        a = self.window.pt_dropdown.get_active_text()
+        b = self.window.pt_dropdown.get_active()
         if b > 0:
             return a
 
-    def getSelectedMonitor(self, callback_data=None):
-        a = self.window.monitorDropdown.get_active_text()
-        b = self.window.monitorDropdown.get_active()
+    def get_selected_monitor(self, callback_data=None):
+        a = self.window.monitor_dropdown.get_active_text()
+        b = self.window.monitor_dropdown.get_active()
         if b > 0:
             return a
 
-    def mapTabletToMonitor(self, callback_data=None):
+    def map_tablet_monitor(self, callback_data=None):
         # find ids for the right input device
-        pen = self.getActiveInput()
+        pen = self.get_active_input()
         # get the display width, screen_width and screen_offset for CTMGenerator function to calculate matrix
-        monitor = self.getSelectedMonitor()
+        monitor = self.get_selected_monitor()
         # call API with these settings
-        self.myConf.setPT2Monitor(pen, monitor)
+        self.config.set_pen_to_monitor(pen, monitor)
 
     def exit_program(self, callback_data=None):
         # This function kills the program PTXConf.
@@ -71,9 +68,9 @@ class PTXConfUI:
         # another from the config popup window "Exit" button.
         gtk.main_quit()
 
-    def createConfigWindow(self, callback_data=None):
+    def create_config_window(self, callback_data=None):
         # first refress all monitor and touch/pen information
-        self.myConf.refresh()
+        self.config.refresh()
 
         # This creats a popup window for more detailed configuration if user find necessary.
         # Still incomplete at the moment.
@@ -81,104 +78,96 @@ class PTXConfUI:
         # self.window.set_position(gtk.WIN_POS_CENTER)
         self.window.set_border_width(20)
         self.window.set_title("PTXConf")
-        self.window.connect("destroy", self.destroyConfigWindow)
+        self.window.connect("destroy", self.destroy_config_window)
 
-        button_apply = gtk.Button("Apply")
-        button_close = gtk.Button("Close")
+        button_apply = gtk.Button.new_with_label("Apply")
+        button_close = gtk.Button.new_with_label("Close")
+        button_close.connect("clicked", self.destroy_config_window)
 
-        button_close.connect("clicked", self.destroyConfigWindow)
-        vbox = gtk.VBox(spacing=20)
-        hbox = gtk.HBox(spacing=20)
-        vboxLeft = gtk.VBox(spacing=6)
-        vboxRight = gtk.VBox(spacing=6)
-        hboxForButtons = gtk.HBox()
-        hboxForButtonsLeft = gtk.HBox(spacing=30)
-        hboxForButtonsRight = gtk.HBox(spacing=10)
-        labelEmptySpace01 = gtk.Label()
-        labelEmptySpace02 = gtk.Label()
+        vbox_root = gtk.Box.new(gtk.Orientation.VERTICAL, 20)
+        hbox_buttons = gtk.ButtonBox.new(gtk.Orientation.HORIZONTAL)
 
-        label01 = gtk.Label("Pointer device")
-        label02 = gtk.Label("Monitor")
+        label_pointer = gtk.Label.new("Pointer device")
+        label_monitor = gtk.Label.new("Monitor")
+
         # create monitor selector widget
-        monSelector = MonitorSelector(self.myConf.monitorIds)
+        mon_selector = MonitorSelector(self.config.monitorIds)
+
         # dropdown menus 1 and 2, users choose what input device map to what monitor.
-        # creat and set up dopdownmenu 1: user select from a list of connected pen input deivces.
-        ptDropdown = gtk.ComboBoxText()
-        # ptDropdown.set_tooltip_text("choose an input device to configure")
+        ptr_dropdown = gtk.ComboBoxText()
+        ptr_dropdown.set_tooltip_text("Choose an input device to configure")
         # getting the list of names of the input device
         # set up the dropdown selection for input devices
-        ptDropdown.append_text("Select input device:")
-        for i in self.myConf.penTouchIds:
-            ptDropdown.append_text(i.decode() if isinstance(i, bytes) else i)
-        ptDropdown.set_active(0)
-        ptDropdown.connect("changed", self.getActiveInput)
-        # creat and set up dopdownmenu 2: user select from a list of connected display/output deivces.
-        monitorDropdown = gtk.ComboBoxText()
-        # monitorDropdown.set_tooltip_text("choose a monitor to map the input to")
+        ptr_dropdown.append_text("")
+        for i in self.config.penTouchIds:
+            ptr_dropdown.append_text(i.decode() if isinstance(i, bytes) else i)
+        ptr_dropdown.set_active(0)
+        ptr_dropdown.connect("changed", self.get_active_input)
+        
+        # create and set up dopdownmenu 2: user select from a list of connected display/output deivces.
+        monitor_dropdown = gtk.ComboBoxText()
+        monitor_dropdown.set_tooltip_text("Choose a monitor to map the input to")
+
         # getting the list of display names
         # set up the dropdown selection for monitors
-        monitorDropdown.append_text("Select a monitor:")
-        monitorDropdown.mons = self.myConf.monitorIds.keys()
-        for key in monitorDropdown.mons:
-            monitorDropdown.append_text(key.decode() if isinstance(key, bytes) else key)
-        monitorDropdown.set_active(0)
-        monitorDropdown.handler_id_changed = monitorDropdown.connect(
-            "changed", self.monDropdownCallback
+        monitor_dropdown.append_text("")
+        monitor_dropdown.mons = self.config.monitorIds.keys()
+        for key in monitor_dropdown.mons:
+            monitor_dropdown.append_text(key.decode() if isinstance(key, bytes) else key)
+        monitor_dropdown.set_active(0)
+        monitor_dropdown.handler_id_changed = monitor_dropdown.connect(
+            "changed", self.monitor_dropdown_callback
         )
 
         # connect apply button to function
-        button_apply.connect("clicked", self.mapTabletToMonitor)
+        button_apply.connect("clicked", self.map_tablet_monitor)
 
         # inserting all widgets in place
-        vboxLeft.pack_start(label01, False, False, True)
-        vboxLeft.pack_start(label02, False, False, 0)
+        hbox_buttons.add(button_apply)
+        hbox_buttons.add(button_close)
 
-        vboxRight.pack_start(ptDropdown, False, False, True)
-        vboxRight.pack_start(monitorDropdown, False, False, 0)
+        grid = gtk.Grid(column_spacing=10, row_spacing=10)
+        grid.set_column_homogeneous(True)
+        grid.set_hexpand(True)
+        grid.attach(label_pointer, 0, 0, 1, 1)
+        grid.attach(label_monitor, 0, 1, 1, 1)
+        grid.attach(ptr_dropdown, 1, 0, 1, 1)
+        grid.attach(monitor_dropdown, 1, 1, 1, 1)
 
-        hboxForButtonsLeft.pack_start(button_apply, False, False, 0)
-        hboxForButtonsLeft.pack_start(labelEmptySpace01, False, False, 0)
-        hboxForButtonsRight.pack_start(labelEmptySpace02, False, False, 0)
-        hboxForButtonsRight.pack_start(button_close, False, False, 0)
-        hboxForButtons.pack_start(hboxForButtonsLeft, False, False, 0)
-        hboxForButtons.pack_start(hboxForButtonsRight, False, False, 0)
-
-        vbox.pack_start(monSelector, False, False, 0)
-        hbox.pack_start(vboxLeft, False, False, 0)
-        hbox.pack_start(vboxRight, False, False, 0)
-        vbox.pack_start(hbox, False, False, 0)
-        vbox.pack_start(hboxForButtons, False, False, 0)
-        self.window.add(vbox)
+        vbox_root.pack_start(mon_selector, False, False, 0)
+        vbox_root.pack_start(grid, False, False, 0)
+        vbox_root.pack_start(hbox_buttons, False, False, 0)
+        self.window.add(vbox_root)
         self.window.show_all()
 
         # store convenient handle to drop down boxes
-        self.window.monitorSelector = monSelector
-        self.window.monitorSelector.connect(
-            "button-press-event", self.monSelectorCallback
+        self.window.monitor_selector = mon_selector
+        self.window.monitor_selector.connect(
+            "button-press-event", self.monitor_selector_callback
         )
-        self.window.ptDropdown = ptDropdown
-        self.window.monitorDropdown = monitorDropdown
+        self.window.pt_dropdown = ptr_dropdown
+        self.window.monitor_dropdown = monitor_dropdown
 
-    def monDropdownCallback(self, calback_data=None):
+    def monitor_dropdown_callback(self, calback_data=None):
         # update MonitorSelector
-        mon = self.window.monitorDropdown.get_active_text()
-        if mon in self.window.monitorSelector.moninfo:
-            self.window.monitorSelector.set_active_mon(mon)
+        mon = self.window.monitor_dropdown.get_active_text()
+        if mon in self.window.monitor_selector.moninfo:
+            self.window.monitor_selector.set_active_mon(mon)
 
-    def monSelectorCallback(self, widget, event):
+    def monitor_selector_callback(self, widget, event):
         # get mon selector selection
-        monSelection = self.window.monitorSelector.get_active_mon()
+        mon_selection = self.window.monitor_selector.get_active_mon()
         # if different than drop down, update drop down
-        if monSelection != self.window.monitorDropdown.get_active_text():
+        if mon_selection != self.window.monitor_dropdown.get_active_text():
             # lookup this monitor index in drop down and set it...
-            idx = list(self.window.monitorDropdown.mons).index(monSelection)
+            idx = list(self.window.monitor_dropdown.mons).index(mon_selection)
             # careful to disable dropdown changed callback while doing this
-            hid = self.window.monitorDropdown.handler_id_changed
-            self.window.monitorDropdown.handler_block(hid)
-            self.window.monitorDropdown.set_active(idx + 1)
-            self.window.monitorDropdown.handler_unblock(hid)
+            hid = self.window.monitor_dropdown.handler_id_changed
+            self.window.monitor_dropdown.handler_block(hid)
+            self.window.monitor_dropdown.set_active(idx + 1)
+            self.window.monitor_dropdown.handler_unblock(hid)
 
-    def destroyConfigWindow(self, callback_data=None):
+    def destroy_config_window(self, callback_data=None):
         # close the popup window, app will still be docked on top menu bar.
         self.window.destroy()
 
@@ -190,6 +179,6 @@ import signal
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 p = PTXConfUI()
-p.createConfigWindow()
+p.create_config_window()
 # p.window.connect("destroy", gtk.main_quit)
 p.main()
